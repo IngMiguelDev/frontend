@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
 @Component({
@@ -7,8 +7,12 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
   standalone: true,
   imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
   template: `
-    <div class="crm-shell">
-      <aside class="sidebar">
+    <div class="crm-shell" [class.sidebar-collapsed]="!sidebarOpen()">
+      @if (sidebarOpen() && isMobileView()) {
+        <button class="sidebar-backdrop" type="button" (click)="toggleSidebar(false)"></button>
+      }
+
+      <aside class="sidebar" [class.sidebar--open]="sidebarOpen()">
         <div class="brand">
           <span class="brand__logo">GT</span>
           <div>
@@ -30,11 +34,25 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
         </section>
       </aside>
 
+      <button
+        class="sidebar-toggle"
+        type="button"
+        (click)="toggleSidebar()"
+        [class.sidebar-toggle--collapsed]="!sidebarOpen()"
+        [attr.aria-label]="sidebarOpen() ? 'Ocultar barra lateral' : 'Mostrar barra lateral'">
+        <span class="sidebar-toggle__chevrons" [class.is-collapsed]="!sidebarOpen()">
+          <span></span>
+          <span></span>
+        </span>
+      </button>
+
       <main class="content">
         <header class="topbar">
-          <div>
+          <div class="topbar__heading">
+            <div>
             <p class="eyebrow">CRM Enterprise UI</p>
             <h2>Gestión de oportunidades</h2>
+            </div>
           </div>
 
           <div class="topbar__meta">
@@ -57,12 +75,27 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
     }
 
     .crm-shell {
+      position: relative;
       display: grid;
       grid-template-columns: 280px minmax(0, 1fr);
       min-height: 100vh;
+      transition: grid-template-columns 180ms ease;
       background:
         radial-gradient(circle at top left, rgba(109, 140, 255, 0.18), transparent 30%),
         linear-gradient(180deg, #f8fbff 0%, #eef4ff 100%);
+    }
+
+    .crm-shell.sidebar-collapsed {
+      grid-template-columns: 0 minmax(0, 1fr);
+    }
+
+    .sidebar-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      border: 0;
+      background: rgba(9, 18, 44, 0.32);
+      backdrop-filter: blur(4px);
     }
 
     .sidebar {
@@ -73,6 +106,13 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
       border-right: 1px solid rgba(15, 23, 42, 0.08);
       background: rgba(9, 18, 44, 0.92);
       color: #dce6ff;
+      overflow: hidden;
+      transition: transform 180ms ease, opacity 180ms ease;
+    }
+
+    .crm-shell.sidebar-collapsed .sidebar {
+      opacity: 0;
+      pointer-events: none;
     }
 
     .brand {
@@ -90,6 +130,62 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
       background: linear-gradient(135deg, #6d8cff, #59d4ff);
       color: white;
       font-weight: 800;
+    }
+
+    .sidebar-toggle {
+      position: absolute;
+      top: 1rem;
+      left: 248px;
+      z-index: 45;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      border: 0;
+      border-radius: 14px;
+      background: #ff3b30;
+      color: white;
+      box-shadow: 0 18px 34px rgba(255, 59, 48, 0.24);
+      cursor: pointer;
+      transition: left 180ms ease, transform 180ms ease, background 180ms ease;
+    }
+
+    .sidebar-toggle:hover {
+      transform: translateY(-1px);
+    }
+
+    .crm-shell.sidebar-collapsed .sidebar-toggle {
+      left: 1rem;
+    }
+
+    .sidebar-toggle__chevrons {
+      position: relative;
+      display: block;
+      width: 20px;
+      height: 14px;
+    }
+
+    .sidebar-toggle__chevrons span {
+      position: absolute;
+      top: 50%;
+      width: 9px;
+      height: 9px;
+      border-top: 2px solid currentColor;
+      border-left: 2px solid currentColor;
+      transform: translateY(-50%) rotate(-45deg);
+    }
+
+    .sidebar-toggle__chevrons span:first-child {
+      left: 1px;
+    }
+
+    .sidebar-toggle__chevrons span:last-child {
+      right: 1px;
+    }
+
+    .sidebar-toggle__chevrons.is-collapsed span {
+      transform: translateY(-50%) rotate(135deg);
     }
 
     .brand h1,
@@ -157,6 +253,11 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
       padding: 2rem 2rem 1rem;
     }
 
+    .topbar__heading {
+      display: flex;
+      align-items: center;
+    }
+
     .topbar__meta {
       display: flex;
       gap: 0.6rem;
@@ -186,9 +287,28 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
         grid-template-columns: 1fr;
       }
 
+      .sidebar-toggle {
+        left: 1rem;
+      }
+
       .sidebar {
+        position: fixed;
+        inset: 0 auto 0 0;
+        z-index: 40;
+        width: min(320px, 86vw);
+        transform: translateX(-100%);
         gap: 1rem;
         padding-bottom: 1rem;
+      }
+
+      .sidebar.sidebar--open {
+        transform: translateX(0);
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .crm-shell.sidebar-collapsed .sidebar {
+        transform: translateX(-100%);
       }
     }
 
@@ -199,10 +319,24 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
         padding: 1.5rem 1rem 1rem;
       }
 
+      .topbar__heading {
+        padding-left: 3.5rem;
+      }
+
       .page {
         padding: 0 1rem 1rem;
       }
     }
   `]
 })
-export class CrmShellComponent {}
+export class CrmShellComponent {
+  readonly sidebarOpen = signal(true);
+
+  isMobileView(): boolean {
+    return typeof window !== 'undefined' ? window.innerWidth <= 1040 : false;
+  }
+
+  toggleSidebar(forceState?: boolean): void {
+    this.sidebarOpen.set(forceState ?? !this.sidebarOpen());
+  }
+}
