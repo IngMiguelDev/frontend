@@ -1,1 +1,43 @@
-/* You can add global styles to this file, and also import other style files */
+:root {
+  --font-sans: 'Manrope', 'Segoe UI', sans-serif;
+  --text-main: #09122c;
+  --text-muted: #64748b;
+  --accent-strong: #4f6fff;
+  --surface: #ffffff;
+  --shadow-soft: 0 16px 40px rgba(15, 23, 42, 0.08);
+  --shadow-strong: 0 22px 50px rgba(15, 23, 42, 0.14);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  color: var(--text-main);
+  background:
+    radial-gradient(circle at top left, rgba(109, 140, 255, 0.2), transparent 24%),
+    radial-gradient(circle at bottom right, rgba(62, 207, 142, 0.12), transparent 24%),
+    #eef4ff;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+.eyebrow {
+  color: var(--accent-strong);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
